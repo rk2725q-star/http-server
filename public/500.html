@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>500 Internal Server Error — NetServe</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌐</text></svg>">
+</head>
+<body style="display: flex; align-items: center; justify-content: center; min-height: 100vh;">
+    <div class="network-bg"></div>
+
+    <div class="card" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 48px; max-width: 520px; text-align: center; box-shadow: var(--shadow-card); z-index: 10;">
+        <div style="font-size: 72px; font-weight: 800; color: var(--accent-rose); line-height: 1; margin-bottom: 12px; font-family: var(--font-mono);">500</div>
+        <h1 style="font-size: 24px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px;">Internal Server Error</h1>
+        <p style="color: var(--text-secondary); font-size: 15px; margin-bottom: 24px;">An unexpected error occurred while NetServe was processing your request. The exception has been recorded in the server logs.</p>
+        <div style="background: #070c14; border: 1px solid var(--border-subtle); padding: 12px; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 13px; color: var(--accent-rose); margin-bottom: 28px;">
+            HTTP/1.1 500 Internal Server Error
+        </div>
+        <div class="cta-buttons" style="margin-bottom: 0;">
+            <a href="/" class="btn btn-primary">Return Home 🏠</a>
+            <a href="/dashboard" class="btn btn-secondary">Server Dashboard 📊</a>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetServe — Intelligent HTTP Web Server & Network Monitor</title>
+    <meta name="description" content="A custom high-performance HTTP web server and real-time network monitoring system built from scratch using Python socket programming.">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌐</text></svg>">
+</head>
+<body>
+    <!-- Background Grid -->
+    <div class="network-bg"></div>
+
+    <!-- Navigation Header -->
+    <header class="navbar">
+        <a href="/" class="nav-brand">
+            <span class="brand-icon">🌐</span>
+            <span>NetServe</span>
+        </a>
+        <nav class="nav-links">
+            <a href="/" class="nav-link active">Home</a>
+            <a href="/about" class="nav-link">About</a>
+            <a href="/docs" class="nav-link">Documentation</a>
+            <a href="/dashboard" class="nav-link">Dashboard</a>
+            <span class="nav-badge server-status-badge">
+                <span class="status-dot"></span> Checking Status...
+            </span>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="logo-container">
+                <div class="logo-pulse"></div>
+                <div class="logo">🌐</div>
+            </div>
+            <h1 class="title">NetServe</h1>
+            <p class="subtitle">A Lightweight HTTP Web Server Built From Scratch</p>
+            <p class="tagline">Demonstrating Raw TCP Sockets • HTTP/1.1 Protocol • Concurrent Worker Threads • Real-Time Network Telemetry</p>
+
+            <div class="cta-buttons">
+                <a href="/dashboard" class="btn btn-primary">Open Live Dashboard 📊</a>
+                <a href="/docs" class="btn btn-secondary">Documentation & Concepts 📖</a>
+                <a href="/about" class="btn btn-secondary">Architecture & Design 🛠️</a>
+            </div>
+
+            <!-- Animated Network Flow Diagram -->
+            <div class="network-visualization">
+                <div class="node">
+                    <div class="node-icon-wrap">💻</div>
+                    <span class="node-label">Client Browser</span>
+                    <span class="node-sub">127.0.0.1:Ephemeral</span>
+                </div>
+
+                <div class="connection-pipe">
+                    <span class="packet-pulse packet-req">GET /docs HTTP/1.1</span>
+                </div>
+
+                <div class="node">
+                    <div class="node-icon-wrap">🔌</div>
+                    <span class="node-label">TCP Socket Server</span>
+                    <span class="node-sub">socket.AF_INET</span>
+                </div>
+
+                <div class="connection-pipe">
+                    <span class="packet-pulse packet-req" style="animation-delay: 0.8s;">ThreadPool Dispatch</span>
+                </div>
+
+                <div class="node">
+                    <div class="node-icon-wrap">⚡</div>
+                    <span class="node-label">NetServe Core</span>
+                    <span class="node-sub">Router & Parser</span>
+                </div>
+
+                <div class="connection-pipe">
+                    <span class="packet-pulse packet-res">HTTP 200 OK (MIME)</span>
+                </div>
+
+                <div class="node">
+                    <div class="node-icon-wrap">📄</div>
+                    <span class="node-label">HTTP Response</span>
+                    <span class="node-sub">HTML / JSON Stream</span>
+                </div>
+            </div>
+
+            <!-- Core Features Grid -->
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🔌</div>
+                    <h3>TCP Socket Server</h3>
+                    <p>Built with raw Python <code>socket.socket(AF_INET, SOCK_STREAM)</code>. Configurable host, port, SO_REUSEADDR, and connection accept loop.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📡</div>
+                    <h3>HTTP/1.1 Parser</h3>
+                    <p>Manual stateful parsing of request lines, headers, query parameters, method validation (GET/HEAD), and payload body limits.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Multi-Threaded Workers</h3>
+                    <p>Non-blocking concurrency using <code>ThreadPoolExecutor</code>. Supports simultaneous clients, persistent Keep-Alive connections, and socket timeouts.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Real-Time Telemetry</h3>
+                    <p>Thread-safe monitoring tracking requests/min, latency distributions, status code breakdown, active clients, and formatted access logging.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Technology Stack Section -->
+        <section class="tech-stack">
+            <h2>Technology Stack (Zero Web Frameworks)</h2>
+            <div class="stack-grid">
+                <div class="stack-item"><span class="stack-icon">🐍</span><span>Python 3.10+</span></div>
+                <div class="stack-item"><span class="stack-icon">🔌</span><span>socket (TCP)</span></div>
+                <div class="stack-item"><span class="stack-icon">🧵</span><span>threading</span></div>
+                <div class="stack-item"><span class="stack-icon">⚡</span><span>concurrent.futures</span></div>
+                <div class="stack-item"><span class="stack-icon">📁</span><span>pathlib</span></div>
+                <div class="stack-item"><span class="stack-icon">📄</span><span>mimetypes</span></div>
+                <div class="stack-item"><span class="stack-icon">📝</span><span>json</span></div>
+                <div class="stack-item"><span class="stack-icon">🕐</span><span>datetime & time</span></div>
+                <div class="stack-item"><span class="stack-icon">🎨</span><span>HTML5 / CSS3</span></div>
+                <div class="stack-item"><span class="stack-icon">⚡</span><span>Vanilla JS</span></div>
+                <div class="stack-item"><span class="stack-icon">📈</span><span>Chart.js</span></div>
+            </div>
+        </section>
+
+        <!-- REST API Section -->
+        <section class="api-section">
+            <h2>REST-like Telemetry JSON APIs</h2>
+            <div class="api-grid">
+                <div class="api-card">
+                    <a href="/api/status" target="_blank"><code>GET /api/status</code></a>
+                    <p>Returns server identity, bind host, listening port, uptime, and active connection count.</p>
+                </div>
+                <div class="api-card">
+                    <a href="/api/stats" target="_blank"><code>GET /api/stats</code></a>
+                    <p>Returns cumulative request counts, average latencies, data throughput, and status code distributions.</p>
+                </div>
+                <div class="api-card">
+                    <a href="/api/requests" target="_blank"><code>GET /api/requests</code></a>
+                    <p>Returns the ring buffer of recent HTTP requests with client IPs, methods, routes, and response times.</p>
+                </div>
+                <div class="api-card">
+                    <a href="/api/network" target="_blank"><code>GET /api/network</code></a>
+                    <p>Returns host IP addresses, listening socket details, peak client concurrency, and network statistics.</p>
+                </div>
+                <div class="api-card">
+                    <a href="/api/logs" target="_blank"><code>GET /api/logs</code></a>
+                    <p>Returns recent structured access logs directly from <code>logs/server.log</code>.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Available Routes Section -->
+        <section class="routes-section">
+            <h2>Static & Dynamic Routes</h2>
+            <div class="routes-grid">
+                <a href="/" class="route-card active"><code>GET /</code><span>Homepage</span></a>
+                <a href="/about" class="route-card"><code>GET /about</code><span>About & Concept</span></a>
+                <a href="/docs" class="route-card"><code>GET /docs</code><span>Networking Docs</span></a>
+                <a href="/dashboard" class="route-card"><code>GET /dashboard</code><span>Network Monitor</span></a>
+                <a href="/non-existent-page" class="route-card"><code>GET /404-test</code><span>Custom 404 Error</span></a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p><strong>NetServe v1.0.0</strong> — Intelligent HTTP Web Server & Real-Time Network Monitoring System</p>
+        <p class="footer-links">
+            <a href="/">Home</a> •
+            <a href="/about">About</a> •
+            <a href="/docs">Documentation</a> •
+            <a href="/dashboard">Dashboard</a>
+        </p>
+    </footer>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

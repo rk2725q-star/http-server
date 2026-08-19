@@ -1,0 +1,20 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs (keep directory structure)
+logs/*.log
+!logs/.gitkeep
+
+# Environment and editor
+.env
+.venv
+env/
+venv/
+.vscode/
+.idea/
+.DS_Store

@@ -1,0 +1,7 @@
+# NetServe Dependencies
+# Core HTTP Server and Socket Engine: Standard Library Only (No external pip dependencies required!)
+# Tech Stack: Python 3, socket, threading, concurrent.futures, pathlib, mimetypes, json, datetime, time
+
+# Optional development and testing tools:
+pytest>=7.4.0
+pytest-cov>=4.1.0

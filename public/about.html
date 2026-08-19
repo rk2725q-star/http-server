@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About NetServe — Architecture & Design</title>
+    <meta name="description" content="Detailed architecture, module design, and networking concepts behind NetServe.">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌐</text></svg>">
+</head>
+<body>
+    <div class="network-bg"></div>
+
+    <header class="navbar">
+        <a href="/" class="nav-brand">
+            <span class="brand-icon">🌐</span>
+            <span>NetServe</span>
+        </a>
+        <nav class="nav-links">
+            <a href="/" class="nav-link">Home</a>
+            <a href="/about" class="nav-link active">About</a>
+            <a href="/docs" class="nav-link">Documentation</a>
+            <a href="/dashboard" class="nav-link">Dashboard</a>
+            <span class="nav-badge server-status-badge">
+                <span class="status-dot"></span> Online
+            </span>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <header class="page-header">
+            <a href="/" class="back-link">← Back to Home</a>
+            <h1 class="title" style="font-size: 2.5rem; text-align: left;">About NetServe</h1>
+            <p class="subtitle" style="text-align: left;">Architecture, Networking Principles & Implementation Details</p>
+        </header>
+
+        <section class="content-section">
+            <h2>1. Project Vision & Purpose</h2>
+            <p>
+                <strong>NetServe</strong> is a custom-built, production-grade HTTP/1.1 web server implemented entirely from ground zero using Python's low-level <code>socket</code> and <code>threading</code> libraries. 
+                Modern web developers frequently use high-level abstractions like Flask, Django, FastAPI, Express, or Nginx without understanding how TCP connections are accepted, how byte streams are parsed into HTTP headers, or how concurrent connections are scheduled across OS threads.
+            </p>
+            <p>
+                NetServe demystifies the network stack by providing a transparent, educational, and fully functional implementation of the HTTP protocol on top of TCP/IP.
+            </p>
+
+            <h2>2. Core Networking Concepts Demonstrated</h2>
+            <div class="concept-grid">
+                <div class="concept-card">
+                    <h3>🔌 1. TCP Sockets & Port Binding</h3>
+                    <p>Uses <code>socket.socket(AF_INET, SOCK_STREAM)</code> with <code>SO_REUSEADDR</code> to create a reliable, ordered, connection-oriented byte stream on a specific TCP port.</p>
+                    <pre><code>self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+self.server_socket.bind((self.host, self.port))
+self.server_socket.listen(100)</code></pre>
+                </div>
+
+                <div class="concept-card">
+                    <h3>📡 2. HTTP/1.1 Request/Response</h3>
+                    <p>Manually reads byte chunks, locates the CRLF header boundary (<code>\r\n\r\n</code>), extracts headers, validates methods (GET, HEAD), and crafts compliant HTTP/1.1 response bytes.</p>
+                    <pre><code>HTTP/1.1 200 OK\r\n
+Date: Wed, 19 Aug 2026 16:35:00 GMT\r\n
+Server: NetServe/1.0.0\r\n
+Content-Type: text/html; charset=utf-8\r\n
+Content-Length: 2048\r\n
+Connection: keep-alive\r\n\r\n
+[Payload Bytes...]</code></pre>
+                </div>
+
+                <div class="concept-card">
+                    <h3>⚡ 3. Thread Pool Concurrency</h3>
+                    <p>Handles multiple concurrent clients without blocking the main server loop using <code>ThreadPoolExecutor</code>, tracking active worker threads and connection lifecycles.</p>
+                    <pre><code>self.executor = ThreadPoolExecutor(max_workers=8)
+while self.running:
+    client_sock, client_addr = self.server_socket.accept()
+    handler = ClientHandler(client_sock, client_addr)
+    self.executor.submit(handler.handle)</code></pre>
+                </div>
+
+                <div class="concept-card">
+                    <h3>📊 4. Real-Time Telemetry & Monitoring</h3>
+                    <p>Thread-safe telemetry engine tracking requests/minute, latency distributions, status code breakdowns (2xx, 3xx, 4xx, 5xx), peak concurrency, and structured access logging.</p>
+                    <pre><code>monitor.record_request(RequestRecord(
+    timestamp=time.time(),
+    client_ip=client_ip,
+    method="GET",
+    path="/api/stats",
+    status_code=200,
+    response_size=1024,
+    duration_ms=1.8
+))</code></pre>
+                </div>
+            </div>
+
+            <h2>3. Complete System Architecture</h2>
+            <div class="architecture-diagram">
+                <pre><code>
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                                 NetServe Architecture                                  │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+
+    ┌─────────────────────────┐
+    │  Client (Web Browser)   │
+    └───────────┬─────────────┘
+                │  1. TCP Handshake (SYN -> SYN-ACK -> ACK)
+                ▼
+    ┌─────────────────────────┐
+    │  TCP Socket Listener    │ ── socket.socket(AF_INET, SOCK_STREAM)
+    │  127.0.0.1:8080         │ ── SO_REUSEADDR, listen(100)
+    └───────────┬─────────────┘
+                │  2. accept() -> client_socket
+                ▼
+    ┌─────────────────────────┐
+    │   ThreadPoolExecutor    │ ── 8 Worker Threads (Non-blocking Concurrency)
+    └───────────┬─────────────┘
+                │  3. Worker Thread handles ClientHandler.handle()
+                ▼
+    ┌─────────────────────────┐
+    │   HTTP Request Parser   │ ── Extracts Method, URI, Headers, Query Params
+    │   (Security Validator)  │ ── Defends against Traversal (../) & Payload Overflows
+    └───────────┬─────────────┘
+                │  4. HTTPRequest Object
+                ▼
+    ┌─────────────────────────┐
+    │      Router Layer       │ ── Matches Path to API Handlers or Static Files
+    └─────┬─────────────────┬─┘
+          │                 │
+          ▼                 ▼
+   ┌─────────────┐   ┌─────────────┐
+   │ REST APIs   │   │ Static File │ ── Resolves HTML, CSS, JS, Images with MIME
+   │ /api/*      │   │ Server      │
+   └──────┬──────┘   └──────┬──────┘
+          │                 │
+          └────────┬────────┘
+                   │  5. HTTPResponse Object
+                   ▼
+    ┌─────────────────────────┐
+    │  HTTP Response Builder  │ ── Generates Status Line, Headers (Date, Server, MIME)
+    └───────────┬─────────────┘
+                │  6. Serialized Bytes -> socket.sendall()
+                ▼
+    ┌─────────────────────────┐
+    │  Network Telemetry &    │ ── RequestLogger (console & server.log)
+    │  Monitoring Subsystem   │ ── NetworkMonitor (metrics for /dashboard)
+    └─────────────────────────┘
+</code></pre>
+            </div>
+
+            <h2>4. Security Safeguards</h2>
+            <ul class="feature-list">
+                <li><strong>Directory Traversal Shield:</strong> Canonical path resolution rejects attempts to escape public directories (e.g. <code>../../etc/passwd</code>).</li>
+                <li><strong>Request Size Caps:</strong> Rejects payloads exceeding 1MB (413 Payload Too Large) to prevent buffer starvation.</li>
+                <li><strong>Header Limits:</strong> Maximum header size (8KB) and maximum header count (100) guards against Slowloris-style header attacks (431).</li>
+                <li><strong>Method Whitelist:</strong> Only allows specified HTTP methods (GET, HEAD), rejecting unsupported methods with 405 Method Not Allowed.</li>
+                <li><strong>Connection Timeout:</strong> Closes inactive TCP sockets after 30 seconds of inactivity to reclaim worker threads.</li>
+            </ul>
+
+            <h2>5. Demonstration & Educational Value</h2>
+            <p>
+                NetServe serves as a comprehensive reference implementation for undergraduate Computer Networks courses.
+                Every metric rendered on the dashboard, every line in <code>server.log</code>, and every byte delivered across the TCP socket is computed natively without external third-party frameworks.
+            </p>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p><strong>NetServe v1.0.0</strong> — Built for Computer Networks Education</p>
+        <p class="footer-links">
+            <a href="/">Home</a> •
+            <a href="/about">About</a> •
+            <a href="/docs">Documentation</a> •
+            <a href="/dashboard">Dashboard</a>
+        </p>
+    </footer>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

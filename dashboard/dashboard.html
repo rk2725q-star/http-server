@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetServe — Network Telemetry Dashboard</title>
+    <link rel="stylesheet" href="/dashboard/dashboard.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <!-- Chart.js from CDN with fallback -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <!-- Top Dashboard Header -->
+    <header class="dash-header">
+        <div class="dash-brand">
+            <a href="/" class="brand-link">
+                <span class="brand-icon">🌐</span>
+                <div>
+                    <h1 class="brand-title">NetServe</h1>
+                    <span class="brand-subtitle">Network & Server Monitor</span>
+                </div>
+            </a>
+            <div class="status-indicator-card">
+                <div class="live-pulse"></div>
+                <div class="status-meta">
+                    <span class="status-text" id="serverStatusText">Server Online</span>
+                    <span class="status-details" id="serverHostPort">127.0.0.1:8080</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="dash-actions">
+            <div class="uptime-badge">
+                <span class="uptime-label">UPTIME</span>
+                <span class="uptime-value" id="uptimeDisplay">00:00:00</span>
+            </div>
+            <div class="polling-toggle">
+                <label class="switch">
+                    <input type="checkbox" id="autoPollCheckbox" checked>
+                    <span class="slider"></span>
+                </label>
+                <span class="poll-label">Live (2s)</span>
+            </div>
+            <button id="btnManualRefresh" class="btn-dash btn-refresh" title="Refresh metrics now">
+                🔄 Refresh
+            </button>
+            <a href="/" class="btn-dash btn-nav">🏠 Home</a>
+            <a href="/docs" class="btn-dash btn-nav">📖 Docs</a>
+        </div>
+    </header>
+
+    <main class="dash-container">
+        <!-- Interactive Traffic Generator Bar -->
+        <section class="traffic-generator-card">
+            <div class="gen-header">
+                <span class="gen-title">⚡ Interactive Traffic Generator (Test Requests)</span>
+                <span class="gen-subtitle">Send real TCP/HTTP requests to observe live metric counters & charts updating:</span>
+            </div>
+            <div class="gen-buttons">
+                <button class="gen-btn" data-url="/">GET / (Home)</button>
+                <button class="gen-btn" data-url="/about">GET /about</button>
+                <button class="gen-btn" data-url="/docs">GET /docs</button>
+                <button class="gen-btn" data-url="/api/stats">GET /api/stats</button>
+                <button class="gen-btn" data-url="/api/status">GET /api/status</button>
+                <button class="gen-btn btn-warn" data-url="/non-existent-page">GET /missing (404)</button>
+                <button class="gen-btn btn-special" id="btnBurstTraffic">🚀 Burst 10 Requests</button>
+            </div>
+            <div id="genFeedback" class="gen-feedback">Ready to send test requests.</div>
+        </section>
+
+        <!-- Metric Cards Row -->
+        <section class="metrics-grid">
+            <div class="metric-card card-cyan">
+                <div class="metric-icon">📡</div>
+                <div class="metric-body">
+                    <span class="metric-label">TOTAL REQUESTS</span>
+                    <span class="metric-value" id="metricTotalRequests">0</span>
+                    <span class="metric-sub" id="metricUniqueClients">0 Unique Clients</span>
+                </div>
+            </div>
+
+            <div class="metric-card card-emerald">
+                <div class="metric-icon">🔌</div>
+                <div class="metric-body">
+                    <span class="metric-label">ACTIVE CONNECTIONS</span>
+                    <span class="metric-value" id="metricActiveConn">0</span>
+                    <span class="metric-sub" id="metricPeakConn">Peak: 0 Sockets</span>
+                </div>
+            </div>
+
+            <div class="metric-card card-blue">
+                <div class="metric-icon">⚡</div>
+                <div class="metric-body">
+                    <span class="metric-label">REQUESTS / MINUTE</span>
+                    <span class="metric-value" id="metricReqPerMin">0.0</span>
+                    <span class="metric-sub">60s Sliding Window</span>
+                </div>
+            </div>
+
+            <div class="metric-card card-purple">
+                <div class="metric-icon">⏱️</div>
+                <div class="metric-body">
+                    <span class="metric-label">AVG RESPONSE TIME</span>
+                    <span class="metric-value" id="metricAvgDuration">0.0 ms</span>
+                    <span class="metric-sub">Socket Roundtrip Latency</span>
+                </div>
+            </div>
+
+            <div class="metric-card card-amber">
+                <div class="metric-icon">📦</div>
+                <div class="metric-body">
+                    <span class="metric-label">DATA TRANSFERRED</span>
+                    <span class="metric-value" id="metricTotalBytes">0 B</span>
+                    <span class="metric-sub">Total Payload Served</span>
+                </div>
+            </div>
+
+            <div class="metric-card card-rose">
+                <div class="metric-icon">⚠️</div>
+                <div class="metric-body">
+                    <span class="metric-label">ERROR RATE & 404s</span>
+                    <span class="metric-value" id="metricErrorRate">0.0%</span>
+                    <span class="metric-sub" id="metric404Count">404 Count: 0</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Grid (2x2) -->
+        <section class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">📈 Request Activity Over Time</h3>
+                    <span class="chart-badge">Live Timeline</span>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="timelineChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">🎯 HTTP Status Code Breakdown</h3>
+                    <span class="chart-badge">Status Classes</span>
+                </div>
+                <div class="chart-wrapper chart-doughnut">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">🏷️ HTTP Method Distribution</h3>
+                    <span class="chart-badge">GET vs HEAD</span>
+                </div>
+                <div class="chart-wrapper chart-doughnut">
+                    <canvas id="methodChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">🛣️ Top Requested Routes</h3>
+                    <span class="chart-badge">Route Volume</span>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="routesChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Lower Section: Request Stream Table + System Info -->
+        <section class="bottom-grid">
+            <!-- Live Request Stream Table -->
+            <div class="table-card">
+                <div class="table-header">
+                    <div>
+                        <h3 class="table-title">📜 Real-Time Request Stream</h3>
+                        <span class="table-sub">Live access log received over TCP sockets</span>
+                    </div>
+                    <div class="table-filter">
+                        <input type="text" id="filterInput" placeholder="Filter by path, IP or status..." class="filter-box">
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="req-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Client IP</th>
+                                <th>Method</th>
+                                <th>Requested Path</th>
+                                <th>Status</th>
+                                <th>Latency</th>
+                                <th>Payload</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requestTableBody">
+                            <tr>
+                                <td colspan="7" class="empty-state">Awaiting incoming HTTP requests...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- System Info Card -->
+            <div class="sys-info-card">
+                <div class="sys-header">
+                    <h3 class="sys-title">🖥️ Server & Network Telemetry</h3>
+                </div>
+                <div class="sys-body">
+                    <div class="sys-row">
+                        <span class="sys-key">Server Engine</span>
+                        <span class="sys-val">NetServe/1.0.0</span>
+                    </div>
+                    <div class="sys-row">
+                        <span class="sys-key">Socket Host</span>
+                        <span class="sys-val" id="sysHost">127.0.0.1</span>
+                    </div>
+                    <div class="sys-row">
+                        <span class="sys-key">TCP Listening Port</span>
+                        <span class="sys-val" id="sysPort">8080</span>
+                    </div>
+                    <div class="sys-row">
+                        <span class="sys-key">Protocol</span>
+                        <span class="sys-val">HTTP/1.1 (TCP Stream)</span>
+                    </div>
+                    <div class="sys-row">
+                        <span class="sys-key">Worker Pool Size</span>
+                        <span class="sys-val" id="sysWorkers">8 Threads</span>
+                    </div>
+                    <div class="sys-row">
+                        <span class="sys-key">Socket Option</span>
+                        <span class="sys-val">SO_REUSEADDR (Enabled)</span>
+                    </div>
+                    <div class="sys-row">
+                        <span class="sys-key">Connection Timeout</span>
+                        <span class="sys-val">30.0s</span>
+                    </div>
+                    <div class="sys-row">
+                        <span class="sys-key">Max Request Size</span>
+                        <span class="sys-val">1 MB</span>
+                    </div>
+                    <div class="sys-row">
+                        <span class="sys-key">Most Active Route</span>
+                        <span class="sys-val font-mono" id="sysTopRoute">N/A</span>
+                    </div>
+                </div>
+
+                <div class="api-links-box">
+                    <span class="api-links-title">Quick API Endpoints:</span>
+                    <div class="api-badges">
+                        <a href="/api/status" target="_blank">/api/status</a>
+                        <a href="/api/stats" target="_blank">/api/stats</a>
+                        <a href="/api/requests" target="_blank">/api/requests</a>
+                        <a href="/api/network" target="_blank">/api/network</a>
+                        <a href="/api/logs" target="_blank">/api/logs</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="dash-footer">
+        <p>NetServe Intelligent Web Server & Network Monitoring System • Built with Python Socket Programming</p>
+    </footer>
+
+    <script src="/dashboard/dashboard.js"></script>
+</body>
+</html>

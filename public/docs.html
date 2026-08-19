@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation — NetServe Networking Guide</title>
+    <meta name="description" content="Complete Computer Networks reference guide covering TCP/IP, Sockets, HTTP/1.1, and Web Server architecture.">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌐</text></svg>">
+</head>
+<body>
+    <div class="network-bg"></div>
+
+    <header class="navbar">
+        <a href="/" class="nav-brand">
+            <span class="brand-icon">🌐</span>
+            <span>NetServe</span>
+        </a>
+        <nav class="nav-links">
+            <a href="/" class="nav-link">Home</a>
+            <a href="/about" class="nav-link">About</a>
+            <a href="/docs" class="nav-link active">Documentation</a>
+            <a href="/dashboard" class="nav-link">Dashboard</a>
+            <span class="nav-badge server-status-badge">
+                <span class="status-dot"></span> Online
+            </span>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <header class="page-header">
+            <a href="/" class="back-link">← Back to Home</a>
+            <h1 class="title" style="font-size: 2.5rem; text-align: left;">Computer Networks Reference Guide</h1>
+            <p class="subtitle" style="text-align: left;">Understanding Web Servers, TCP Sockets, and HTTP/1.1 from First Principles</p>
+        </header>
+
+        <!-- Interactive Tester Widget -->
+        <div class="interactive-box">
+            <h3 style="margin-bottom: 8px; color: var(--accent-cyan);">🧪 Interactive HTTP Request Inspector</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 16px;">
+                Send an actual HTTP request to NetServe's TCP socket and inspect the parsed response line, headers, and payload in real time.
+            </p>
+            <div class="test-controls">
+                <input type="text" id="testPathInput" class="test-input" value="/api/status" placeholder="/api/status, /about, /api/stats, /invalid-path">
+                <button id="btnTestRequest" class="btn btn-primary">Transmit Request 🚀</button>
+            </div>
+            <pre id="testOutput" class="test-output">Click 'Transmit Request' to dispatch an HTTP GET request to the server...</pre>
+        </div>
+
+        <section class="content-section">
+            <h2>1. What is a Web Server?</h2>
+            <p>
+                A <strong>web server</strong> is software (and underlying hardware) that listens for incoming network connections from clients (such as web browsers), processes their requests according to the Hypertext Transfer Protocol (HTTP), and transmits back responses containing HTML pages, media files, or JSON API data.
+            </p>
+
+            <h2>2. Client-Server Architecture</h2>
+            <p>
+                In the client-server paradigm, communication is asymmetric:
+            </p>
+            <ul class="feature-list">
+                <li><strong>Client (Active Initiator):</strong> Establishes a TCP connection to the server's IP address and listening port, transmits an HTTP request, and waits for a response.</li>
+                <li><strong>Server (Passive Listener):</strong> Binds to a local network interface and port, continuously listens for incoming connections, and processes multiple client requests concurrently.</li>
+            </ul>
+
+            <h2>3. TCP & Sockets Explained</h2>
+            <p>
+                The <strong>Transmission Control Protocol (TCP)</strong> operates at the Transport Layer (Layer 4) of the OSI model. TCP provides reliable, ordered, error-checked delivery of a stream of octets (bytes) between applications running on hosts communicating via an IP network.
+            </p>
+
+            <h3>The 3-Way Handshake</h3>
+            <pre><code>Client                          Server
+  │                               │
+  │─── SYN (Seq = X) ────────────▶│  1. Client initiates connection
+  │                               │
+  │◀── SYN-ACK (Seq=Y, Ack=X+1) ──│  2. Server acknowledges and responds
+  │                               │
+  │─── ACK (Seq = X+1, Ack=Y+1) ─▶│  3. Connection ESTABLISHED!
+  │                               │</code></pre>
+
+            <h3>What is a Socket?</h3>
+            <p>
+                A <strong>socket</strong> is an endpoint of a two-way communication link between two programs running on the network. A socket is uniquely identified by the combination of an <strong>IP Address</strong> and a <strong>Port Number</strong>.
+            </p>
+
+            <h3>Socket Lifecycle in NetServe</h3>
+            <ol>
+                <li><code>socket.socket(AF_INET, SOCK_STREAM)</code>: Creates an IPv4 TCP stream socket.</li>
+                <li><code>setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)</code>: Enables immediate port reuse upon restart.</li>
+                <li><code>bind(('127.0.0.1', 8080))</code>: Associates the socket with host IP 127.0.0.1 and port 8080.</li>
+                <li><code>listen(100)</code>: Puts the socket in passive listening mode with a connection backlog queue of 100.</li>
+                <li><code>accept()</code>: Blocks until a new client connects, returning a new client socket and client address tuple <code>(IP, Port)</code>.</li>
+                <li><code>recv(4096)</code>: Reads incoming byte chunks from the TCP stream.</li>
+                <li><code>sendall(data)</code>: Transmits the HTTP response bytes back across the TCP stream.</li>
+                <li><code>close()</code>: Tears down the connection.</li>
+            </ol>
+
+            <h2>4. HTTP/1.1 Request Structure</h2>
+            <p>
+                An HTTP/1.1 request is an ASCII text stream separated by CRLF (<code>\r\n</code>) line endings:
+            </p>
+            <pre><code>┌────────────────────────────────────────────────────────┐
+│ Request Line:  GET /api/status HTTP/1.1\r\n             │
+├────────────────────────────────────────────────────────┤
+│ Headers:       Host: 127.0.0.1:8080\r\n                 │
+│                User-Agent: Mozilla/5.0...\r\n          │
+│                Accept: application/json\r\n            │
+│                Connection: keep-alive\r\n              │
+├────────────────────────────────────────────────────────┤
+│ Empty Line:    \r\n                                    │
+├────────────────────────────────────────────────────────┤
+│ Optional Body: [Payload data if POST/PUT]\r\n          │
+└────────────────────────────────────────────────────────┘</code></pre>
+
+            <h2>5. HTTP/1.1 Response Structure</h2>
+            <pre><code>┌────────────────────────────────────────────────────────┐
+│ Status Line:   HTTP/1.1 200 OK\r\n                     │
+├────────────────────────────────────────────────────────┤
+│ Headers:       Date: Wed, 19 Aug 2026 16:40:00 GMT\r\n  │
+│                Server: NetServe/1.0.0\r\n              │
+│                Content-Type: application/json\r\n       │
+│                Content-Length: 148\r\n                 │
+│                Connection: keep-alive\r\n              │
+├────────────────────────────────────────────────────────┤
+│ Empty Line:    \r\n                                    │
+├────────────────────────────────────────────────────────┤
+│ Body Data:     {"server":"NetServe","status":"running"}│
+└────────────────────────────────────────────────────────┘</code></pre>
+
+            <h2>6. HTTP Status Codes Quick Reference</h2>
+            <div class="concept-grid" style="margin-bottom: 30px;">
+                <div class="concept-card">
+                    <h3 style="color: var(--accent-emerald);">2xx Success</h3>
+                    <p><strong>200 OK:</strong> Standard response for successful HTTP requests.</p>
+                    <p><strong>201 Created:</strong> Request fulfilled and new resource created.</p>
+                    <p><strong>204 No Content:</strong> Server successfully processed request, returning no body.</p>
+                </div>
+                <div class="concept-card">
+                    <h3 style="color: var(--accent-amber);">4xx Client Errors</h3>
+                    <p><strong>400 Bad Request:</strong> Malformed request syntax or invalid characters.</p>
+                    <p><strong>404 Not Found:</strong> Requested resource does not exist.</p>
+                    <p><strong>405 Method Not Allowed:</strong> HTTP method (e.g. DELETE) is disabled.</p>
+                    <p><strong>413 Payload Too Large:</strong> Request size exceeds 1MB limit.</p>
+                    <p><strong>431 Headers Too Large:</strong> Header fields exceed 8KB.</p>
+                </div>
+                <div class="concept-card">
+                    <h3 style="color: var(--accent-rose);">5xx Server Errors</h3>
+                    <p><strong>500 Internal Server Error:</strong> Server encountered an unhandled exception.</p>
+                    <p><strong>501 Not Implemented:</strong> Server lacks ability to fulfill the request.</p>
+                    <p><strong>503 Service Unavailable:</strong> Server temporarily overloaded.</p>
+                </div>
+            </div>
+
+            <h2>7. Concurrency: Multi-Threading in NetServe</h2>
+            <p>
+                In a single-threaded server, if a client experiences network latency or takes 5 seconds to download an asset, all other connecting clients are blocked. NetServe employs Python's <code>concurrent.futures.ThreadPoolExecutor</code>.
+                When <code>accept()</code> yields a new client connection, the socket handle is submitted to an idle worker thread in the pool.
+            </p>
+
+            <h2>8. Step-by-Step Request Lifecycle in NetServe</h2>
+            <ol>
+                <li><strong>TCP Connection Established:</strong> OS finishes TCP 3-way handshake on port 8080.</li>
+                <li><strong>Accept Loop:</strong> <code>NetServeServer</code> accepts the socket and submits it to <code>ThreadPoolExecutor</code>.</li>
+                <li><strong>Buffer Ingestion:</strong> <code>ClientHandler</code> reads socket stream into a buffer until <code>\r\n\r\n</code> is identified.</li>
+                <li><strong>HTTP Parsing:</strong> <code>HTTPRequestParser</code> validates the request line, extracts method, URI, headers, and query parameters.</li>
+                <li><strong>Routing:</strong> <code>Router</code> checks registered routes (e.g., <code>/api/status</code>) or delegates to <code>resolve_file_path</code> for static files.</li>
+                <li><strong>Response Construction:</strong> <code>ResponseBuilder</code> serializes the status line, RFC-compliant Date header, Server header, MIME Content-Type, Content-Length, and body.</li>
+                <li><strong>Transmission:</strong> Serialized bytes are sent over the socket via <code>sendall()</code>.</li>
+                <li><strong>Telemetry Logging:</strong> Latency and status are logged to <code>server.log</code> and recorded in <code>NetworkMonitor</code> for the live dashboard.</li>
+            </ol>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p><strong>NetServe v1.0.0</strong> — Built for Computer Networks Education</p>
+        <p class="footer-links">
+            <a href="/">Home</a> •
+            <a href="/about">About</a> •
+            <a href="/docs">Documentation</a> •
+            <a href="/dashboard">Dashboard</a>
+        </p>
+    </footer>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>
