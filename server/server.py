@@ -231,7 +231,10 @@ class NetServeServer:
         try:
             self.server_socket.bind((self.host, self.port))
         except OSError as e:
-            server_logger.log_error(f"Failed to bind socket to {self.host}:{self.port} - {e}")
+            server_logger.log_error(f"Port {self.port} is currently in use by another program on this machine (WinError: {e}).")
+            server_logger.log_info(f"Please specify an available port, for example:")
+            server_logger.log_info(f"   python run.py --port 8000")
+            server_logger.log_info(f"   python run.py --port 8088")
             sys.exit(1)
 
         # 4. Listen for incoming TCP connection requests
